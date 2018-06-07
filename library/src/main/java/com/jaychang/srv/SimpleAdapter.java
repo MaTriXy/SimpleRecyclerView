@@ -1,5 +1,7 @@
 package com.jaychang.srv;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
@@ -37,7 +39,7 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
   }
 
   @Override
-  public SimpleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+  public SimpleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
     SimpleCell cell = cellTypeMap.get(viewType);
     View view = LayoutInflater.from(parent.getContext()).inflate(cell.getLayoutRes(), parent, false);
     final SimpleViewHolder viewHolder = cell.onCreateViewHolder(parent, view);
@@ -59,7 +61,7 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
   }
 
   @Override
-  public void onBindViewHolder(final SimpleViewHolder holder, int position, List<Object> payloads) {
+  public void onBindViewHolder(@NonNull  final SimpleViewHolder holder, @NonNull int position, @Nullable List<Object> payloads) {
     final SimpleCell cell = cells.get(position);
 
     holder.bind(cell);
@@ -83,25 +85,6 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
       });
     }
 
-    if (cell.getOnCellClickListener2() != null) {
-      holder.itemView.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          cell.getOnCellClickListener2().onCellClicked(cell, holder, cell.getItem());
-        }
-      });
-    }
-
-    if (cell.getOnCellLongClickListener2() != null) {
-      holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-        @Override
-        public boolean onLongClick(View v) {
-          cell.getOnCellLongClickListener2().onCellLongClicked(cell, holder, cell.getItem());
-          return true;
-        }
-      });
-    }
-
     Object payload = null;
     if (payloads != null && payloads.size() > 0) {
       payload = payloads.get(0);
@@ -111,12 +94,12 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
   }
 
   @Override
-  public void onBindViewHolder(SimpleViewHolder holder, int position) {
+  public void onBindViewHolder(@NonNull SimpleViewHolder holder, int position) {
     onBindViewHolder(holder, position, null);
   }
 
   @Override
-  public void onViewRecycled(SimpleViewHolder holder) {
+  public void onViewRecycled(@NonNull SimpleViewHolder holder) {
     holder.getCell().onUnbindViewHolder(holder);
     holder.unbind();
   }
@@ -128,7 +111,11 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
 
   @Override
   public int getItemViewType(int position) {
-    return cells.get(position).getLayoutRes();
+    return getItemViewType(cells.get(position));
+  }
+
+  private int getItemViewType(SimpleCell cell) {
+    return cell.getClass().getName().hashCode();
   }
 
   @Override
@@ -138,7 +125,7 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
 
   private void addCellType(SimpleCell cell) {
     if (!isCellTypeAdded(cell)) {
-      cellTypeMap.put(cell.getLayoutRes(), cell);
+      cellTypeMap.put(getItemViewType(cell), cell);
     }
   }
 
@@ -158,12 +145,12 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
     }
 
     if (isCellTypeAdded(cell) && !hasCellType) {
-      cellTypeMap.remove(cell.getLayoutRes());
+      cellTypeMap.remove(getItemViewType(cell));
     }
   }
 
   private boolean isCellTypeAdded(SimpleCell cell) {
-    return cellTypeMap.indexOfKey(cell.getLayoutRes()) >= 0;
+    return cellTypeMap.indexOfKey(getItemViewType(cell)) >= 0;
   }
 
   @Override
@@ -252,7 +239,7 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
 
   @Override
   public void removeCells(int fromPosition, int toPosition) {
-    for (int i = fromPosition; i <= toPosition; i++) {
+    for (int i = toPosition; i >= fromPosition; i--) {
       SimpleCell cell = cells.get(i);
       cells.remove(cell);
       removeCellType(cell);
@@ -278,7 +265,7 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleViewHolder>
   }
 
   @Override
-  public void updateCells(int fromPosition, int toPosition, List<Object> payloads) {
+  public void updateCells(int fromPosition, int toPosition, Object payloads) {
     notifyItemRangeChanged(fromPosition, toPosition - fromPosition + 1, payloads);
   }
 

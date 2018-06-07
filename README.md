@@ -1,60 +1,54 @@
 # SimpleRecyclerView
-[![Release](https://jitpack.io/v/jaychang0917/SimpleRecyclerView.svg)](https://jitpack.io/#jaychang0917/SimpleRecyclerView)
+[![Download](https://api.bintray.com/packages/jaychang0917/maven/simplerecyclerview/images/download.svg) ](https://bintray.com/jaychang0917/maven/simplerecyclerview/_latestVersion)
 [![Android Weekly](http://img.shields.io/badge/Android%20Weekly-%23243-2CB3E5.svg)](http://androidweekly.net/issues/issue-243)
 
 A RecyclerView extension for building list more easily.
 
-##[Screenshot](https://github.com/jaychang0917/SimpleRecyclerView/blob/master/art/screenshot.md)
+## [Screenshot](https://github.com/jaychang0917/SimpleRecyclerView/blob/master/art/screenshot.md)
 
-##Table of Contents
-- [Basic Usage](#basic_usage) 
-- [Multiple Types](#multi_types)
-- [Cell Operations](#cell_ops) 
-- [Divider](#divider)
-- [Spacing](#spacing)
-- [Empty State View](#empty_view) 
-- [Section Header](#section_header) 
-- [Auto Load More](#auto_load_more)
- - [Load more threshold](#load_more_threshold)
- - [Load more view](#load_more_view)
- - [Load more to top](#load_more_top)
-- [Drag & Drop](#drag_drop)
-- [Swipe To Dismiss](#swipe_dismiss)
-- [Snappy](#snappy)
-- [References](#refs)
- - [Attributes](#attr)
- - [Cell Operations](#cell_ops_list)
+## Table of Contents
+* [Basic Usage](#basic_usage)
+  * [Kotlin android extensions support](#kotlin_support)   
+* [Multiple Types](#multi_types)
+* [Cell Operations](#cell_ops) 
+* [Divider](#divider)
+* [Spacing](#spacing)
+* [Empty State View](#empty_view) 
+* [Section Header](#section_header) 
+* [Auto Load More](#auto_load_more)
+  * [Load more threshold](#load_more_threshold)
+  * [Load more view](#load_more_view)
+  * [Load more to top](#load_more_top)
+* [Drag & Drop](#drag_drop)
+* [Swipe To Dismiss](#swipe_dismiss)
+* [Snappy](#snappy)
+* [References](#refs)
+  * [Attributes](#attr)
+  * [Cell Operations](#cell_ops_list)
 
-##Sample Project
-<img src="https://github.com/jaychang0917/SimpleRecyclerView/blob/master/art/qr_code_1_1_9.png" width="100" height="100">
+## Sample Project
+<a href='https://play.google.com/store/apps/details?id=com.jaychang.demo.srv&hl=en'>
+    <img alt='Get it on Google Play' 
+         src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
+         height="116" width="300"/>
+</a>
 
-[Sample apk](https://github.com/jaychang0917/SimpleRecyclerView/blob/master/art/SimpleRecyclerView_1_1_9.apk)
-
-##Installation
-In your project level build.gradle :
-
-```java
-allprojects {
-    repositories {
-        ...
-        maven { url "https://jitpack.io" }
-    }
-}
-```
-
+## Installation
 In your app level build.gradle :
 
 ```java
 dependencies {
-    compile 'com.github.jaychang0917:SimpleRecyclerView:1.1.10'
+    implementation 'com.jaychang:simplerecyclerview:2.0.4'
+    // for kotlin android extensions
+    implementation 'com.jaychang:simplerecyclerview-kotlin-android-extensions:2.0.4'
 }
 ```
-
+[![Download](https://api.bintray.com/packages/jaychang0917/maven/simplerecyclerview/images/download.svg) ](https://bintray.com/jaychang0917/maven/simplerecyclerview/_latestVersion)
 ---
 
-##<a name=basic_usage>Basic Usage</a>
+## <a name=basic_usage>Basic Usage</a>
 Basically, there are three steps to build your list.
-####1. Configure the SimpleRecyclerView
+#### 1. Configure the SimpleRecyclerView
 >[Full attributes list](#attr)
 
 ```xml
@@ -67,7 +61,7 @@ Basically, there are three steps to build your list.
     app:srv_gridSpanSequence="integer string (e.g. 2233)"
     ... />
 ```
-####2. Define the cell by extending `SimpleCell<T,VH>`
+#### 2. Define the cell by extending `SimpleCell<T, VH>`
 ```java
 /**
  * Accept two type arguments,
@@ -97,7 +91,7 @@ public class BookCell extends SimpleCell<Book, BookCell.ViewHolder> {
   }
 
   @Override
-  protected void onBindViewHolder(ViewHolder holder, int position, Context context, List<Object> payloads) {
+  protected void onBindViewHolder(ViewHolder holder, int position, Context context, Object payload) {
     holder.textView.setText(getItem().getTitle());
   }
   
@@ -110,48 +104,49 @@ public class BookCell extends SimpleCell<Book, BookCell.ViewHolder> {
   }
 
   /**
-   * The unique identifier of your data model.
-   * If you use updateCell() or addOrUpdateCell(), you must return a valid
-   * unique id. If you're not going to use those operations, you can simply
-   * return 0.
-   * */
-  @Override
-  protected long getItemId() {
-    return getItem().getId();
-  }
-
-  /**
    * Define your view holder, which must extend SimpleViewHolder.
    * */
   static class ViewHolder extends SimpleViewHolder {
-    @BindView(R.id.textView)
     TextView textView;
 
     ViewHolder(View itemView) {
       super(itemView);
-      ButterKnife.bind(this, itemView);
+      textView = itemView.findViewById(R.id.textView);
     }
   }
 
 }
 ```
-####3. Create cell(s) and add them to the SimpleRecyclerView
+##### <a name=kotlin_support>Kotlin android extensions support</a>
+If you are using Kotlin android extensions, the cell can be simplified as following:
+```kotlin
+class BookCell(item: Book) : SimpleCell<Book>(item) {
+  override fun getLayoutRes(): Int {
+    return R.layout.cell_book
+  }
+
+  override fun onBindViewHolder(holder: SimpleViewHolder, position: Int, context: Context, payload: Any) {
+    holder.textView.text = item.title
+  }
+}
+```
+#### 3. Create cell(s) and add them to the SimpleRecyclerView
 ```java
 List<Book> books = DataUtils.getBooks();
 List<BookCell> cells = new ArrayList<>();
 
 for (Book book : books) {
   BookCell cell = new BookCell(book);
-  // There are two default cell listeners: OnCellClickListener<CELL, VH, T> and OnCellLongClickListener<CELL, VH, T>
-  cell.setOnCellClickListener2(new SimpleCell.OnCellClickListener2<BookCell, BookCell.ViewHolder, Book>() {
+  // There are two default cell listeners: OnCellClickListener<T> and OnCellLongClickListener<T>
+  cell.setOnCellClickListener(new SimpleCell.OnCellClickListener<Book>() {
     @Override
-    public void onCellClicked(BookCell bookCell, BookCell.ViewHolder viewHolder, Book item) {
+    public void onCellClicked(Book item) {
       ...
     }
   });
-  cell.setOnCellLongClickListener2(new SimpleCell.OnCellLongClickListener2<BookCell, BookCell.ViewHolder, Book>() {
+  cell.setOnCellLongClickListener(new SimpleCell.OnCellLongClickListener<Book>() {
     @Override
-    public void onCellLongClicked(BookCell bookCell, BookCell.ViewHolder viewHolder, Book item) {
+    public void onCellLongClicked(Book item) {
       ...
     }
   });
@@ -162,7 +157,7 @@ simpleRecyclerView.addCells(cells);
 ```
 Then, there you go!
 
-##<a name=multi_types>Multiple Types</a>
+## <a name=multi_types>Multiple Types</a>
 SimpleRecyclerView supports multiple cell types. You can add different type of cells to it just like adding different type of objects to a list. The SimpleRecyclerView will handle the rest for you.
 ```java
 List<Book> books = DataUtils.getBooks();
@@ -185,7 +180,7 @@ for (Ad ad : ads) {
 simpleRecyclerView.addCells(cells);
 ```
 
-##<a name=cell_ops>Cell Operations</a>
+## <a name=cell_ops>Cell Operations</a>
 SimpleRecyclerView provides basic CRUD cell operations. 
 >[Full cell operations list](#cell_ops_list)
 
@@ -247,7 +242,7 @@ public class BookCell extends SimpleCell<Book, BookCell.ViewHolder>
 }
 ```
 
-##<a name=divider>Divider</a>
+## <a name=divider>Divider</a>
 ```xml
 <com.jaychang.srv.SimpleRecyclerView
     android:id="@+id/recyclerView"
@@ -264,7 +259,7 @@ public class BookCell extends SimpleCell<Book, BookCell.ViewHolder>
     app:srv_dividerPaddingBottom="dp" />
 ```
 
-##<a name=spacing>Spacing</a>
+## <a name=spacing>Spacing</a>
 ```xml
 <com.jaychang.srv.SimpleRecyclerView
     android:id="@+id/recyclerView"
@@ -277,7 +272,7 @@ public class BookCell extends SimpleCell<Book, BookCell.ViewHolder>
     app:srv_isSpacingIncludeEdge="true|false" />
 ```
 
-##<a name=empty_view>Empty State View</a>
+## <a name=empty_view>Empty State View</a>
 The empty state view will be shown automatically when there is no data. If you want to show the empty state view explicitly, you can set `srv_showEmptyStateView` attribute to `true` (Default `false`). 
 ```xml
 <com.jaychang.srv.SimpleRecyclerView
@@ -289,10 +284,10 @@ The empty state view will be shown automatically when there is no data. If you w
     app:srv_showEmptyStateView="true|false" />
 ```
 
-##<a name=section_header>Section Header</a>
-You can group cells together by providing a [`SectionHeaderProvider<T>`][2] to `setSectionHeader(provider)`. A shorthand method [`SectionHeaderProviderAdapter<T>`][3] is also provided. 
+## <a name=section_header>Section Header</a>
+You can group cells together by providing a [`SectionHeaderProvider<T>`][2] to `setSectionHeader(provider)`. A shorthand method [`SimpleSectionHeaderProvider<T>`][3] is also provided. **The section header is not interative (e.g. can't be clicked)**
 ```java
-SectionHeaderProvider<Book> sectionHeaderProvider = new SectionHeaderProviderAdapter<Book>() {
+SectionHeaderProvider<Book> sectionHeaderProvider = new SimpleSectionHeaderProvider<Book>() {
   // Your section header view here
   @NonNull
   @Override
@@ -324,20 +319,26 @@ SectionHeaderProvider<Book> sectionHeaderProvider = new SectionHeaderProviderAda
 simpleRecyclerView.setSectionHeader(sectionHeaderProvider);
 ```
 
-##<a name=auto_load_more>Auto Load More</a>
-####<a name=load_more_threshold>Load more threshold</a>
+## <a name=auto_load_more>Auto Load More</a>
+#### <a name=load_more_threshold>Load more threshold</a>
 ```java
-// if the total beneath hidden cells count <= 4, onLoadMore() will be called. Default threshold is 0.
+// if the total beneath hidden cells count <= 4 and shouldLoadMore() is true, onLoadMore() will be called. Default threshold is 0.
 simpleRecyclerView.setAutoLoadMoreThreshold(4);
 
 simpleRecyclerView.setOnLoadMoreListener(new OnLoadMoreListener() {
   @Override
-  public void onLoadMore(SimpleRecyclerView simpleRecyclerView) {
+  public boolean shouldLoadMore() {
+    return hasMoreData;
+  }
+  
+  @Override
+  public void onLoadMore() {
     loadBooks();
   }
 });
 ```
-####<a name=load_more_view>Load more view</a>
+
+#### <a name=load_more_view>Load more view</a>
 ```xml
 <com.jaychang.srv.SimpleRecyclerView
     android:id="@+id/recyclerView"
@@ -346,14 +347,14 @@ simpleRecyclerView.setOnLoadMoreListener(new OnLoadMoreListener() {
     app:srv_layoutMode="linearVertical"
     app:srv_loadMoreView="@layout/view_load_more" />
 ```
-####<a name=load_more_top>Load more to top</a>
+#### <a name=load_more_top>Load more to top</a>
 If you are going to build a list like chatting, i.e. the cells are added to top of the list, you should set `setLoadMoreToTop(true)`. This instructs the SimpleRecyclerView to check threshold for the top hidden cells.
 ```java
 simpleRecyclerView.setLoadMoreToTop(true);
 ```
 
-##<a name=drag_drop>Drag & Drop</a>
-You can enable drag and drop by providing a [`DragAndDropCallback<T>`][4] to `enableDragAndDrop(callback)` or `enableDragAndDrop(dragHandleResId, callback)`, the latter one accepts a drag handle view resource id, only pressing this view will trigger drag behavior. Default long press to trigger drag behavior. Also, all callback methods of `DragAndDropCallback<T>` are optional.
+## <a name=drag_drop>Drag & Drop</a>
+You can enable drag and drop by providing a [`DragAndDropCallback<T>`][4] for `enableDragAndDrop(callback)` or `enableDragAndDrop(dragHandleResId, callback)`, the latter one accepts a drag handle view resource id, only pressing this view will trigger drag behavior. Default long press to trigger drag behavior. Also, all callback methods of `DragAndDropCallback<T>` are optional.
 ```java
 DragAndDropCallback<Book> dragAndDropCallback = new DragAndDropCallback<Book>() {
   // Optional, return false if you manipulate custom drag effect in the rest of callbacks.
@@ -393,7 +394,7 @@ simpleRecyclerView.enableDragAndDrop(R.id.dragHandle, dragAndDropCallback);
 simpleRecyclerView.enableDragAndDrop(dragAndDropCallback);
 ```
 
-##<a name=swipe_dismiss>Swipe To Dismiss</a>
+## <a name=swipe_dismiss>Swipe To Dismiss</a>
 You can enable swipe to dismiss by providing a [`SwipeToDismissCallback<T>`][5] to `enableSwipeToDismiss(callback, swipeDirections)`. All callback methods of `SwipeToDismissCallback<T>` are optional.
 ```java
 SwipeToDismissCallback<Book> swipeToDismissCallback = new SwipeToDismissCallback<Book>() {
@@ -427,7 +428,7 @@ SwipeToDismissCallback<Book> swipeToDismissCallback = new SwipeToDismissCallback
 simpleRecyclerView.enableSwipeToDismiss(swipeToDismissCallback, LEFT, RIGHT);
 ```
 
-##<a name=snappy>Snappy</a>
+## <a name=snappy>Snappy</a>
 ```xml
 <com.jaychang.srv.SimpleRecyclerView
    android:id="@+id/recyclerView"
@@ -439,9 +440,9 @@ simpleRecyclerView.enableSwipeToDismiss(swipeToDismissCallback, LEFT, RIGHT);
 ```
 ---
 
-##<a name=refs>Reference</a>
+## <a name=refs>Reference</a>
 
-###<a name=attr>Attributes</a>
+### <a name=attr>Attributes</a>
 
 >All attrs have coressponding java method.
 
@@ -466,9 +467,9 @@ simpleRecyclerView.enableSwipeToDismiss(swipeToDismissCallback, LEFT, RIGHT);
 | srv_showEmptyStateView | Show empty state view explicitly. Default `false` |
 | srv_loadMoreView | Layout resource of load more view to be shown when loading more. |
 | srv_snappy | If set to true, snappy mode is enabled. Default `false` |
-| srv_snap_alignment | Snap alignment. Support `center` and `start` |
+| srv_snap_alignment | Snap alignment. Support `center` and `start`. Default `center` |
 
-###<a name=cell_ops_list>Cell Operations</a>
+### <a name=cell_ops_list>Cell Operations</a>
 | Operation                         | Remark                                |
 |  --------------------------------------------- | ------------------------------------------------|
 | addCell(SimpleCell cell)                       | Add the cell to the end of list|
@@ -494,12 +495,12 @@ simpleRecyclerView.enableSwipeToDismiss(swipeToDismissCallback, LEFT, RIGHT);
 
 [1]: https://goo.gl/AB43P4
 [2]: https://github.com/jaychang0917/SimpleRecyclerView/blob/master/library/src/main/java/com/jaychang/srv/decoration/SectionHeaderProvider.java
-[3]: https://github.com/jaychang0917/SimpleRecyclerView/blob/master/library/src/main/java/com/jaychang/srv/decoration/SectionHeaderProviderAdapter.java
+[3]: https://github.com/jaychang0917/SimpleRecyclerView/blob/master/library/src/main/java/com/jaychang/srv/decoration/SimpleSectionHeaderProvider.java
 [4]: https://github.com/jaychang0917/SimpleRecyclerView/blob/master/library/src/main/java/com/jaychang/srv/behavior/DragAndDropCallback.java
 [5]: https://github.com/jaychang0917/SimpleRecyclerView/blob/master/library/src/main/java/com/jaychang/srv/behavior/SwipeToDismissCallback.java
 
 
-##License
+## License
 ```
 Copyright 2017 Jay Chang
 

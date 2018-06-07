@@ -10,6 +10,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -70,7 +71,6 @@ public class SimpleRecyclerView extends RecyclerView
   private int loadMoreViewRes;
 
   private SimpleAdapter adapter;
-  private LayoutManager layoutManager;
   private AdapterDataObserver adapterDataObserver = new AdapterDataObserver() {
     @Override
     public void onChanged() {
@@ -121,27 +121,27 @@ public class SimpleRecyclerView extends RecyclerView
   }
 
   private void initAttrs(Context context, AttributeSet attrs, int defStyle) {
-    TypedArray typedArray = context.getTheme().obtainStyledAttributes(attrs, R.styleable.srv_SimpleRecyclerView, defStyle, 0);
-    layoutMode = typedArray.getInt(R.styleable.srv_SimpleRecyclerView_srv_layoutMode, 0);
-    gridSpanCount = typedArray.getInt(R.styleable.srv_SimpleRecyclerView_srv_gridSpanCount, 0);
-    gridSpanSequence = typedArray.getString(R.styleable.srv_SimpleRecyclerView_srv_gridSpanSequence);
-    spacing = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_spacing, 0);
-    verticalSpacing = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_verticalSpacing, 0);
-    horizontalSpacing = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_horizontalSpacing, 0);
-    isSpacingIncludeEdge = typedArray.getBoolean(R.styleable.srv_SimpleRecyclerView_srv_isSpacingIncludeEdge, false);
-    showDivider = typedArray.getBoolean(R.styleable.srv_SimpleRecyclerView_srv_showDivider, false);
-    showLastDivider = typedArray.getBoolean(R.styleable.srv_SimpleRecyclerView_srv_showLastDivider, false);
-    dividerColor = typedArray.getColor(R.styleable.srv_SimpleRecyclerView_srv_dividerColor, 0);
-    dividerOrientation = typedArray.getInt(R.styleable.srv_SimpleRecyclerView_srv_dividerOrientation, 2);
-    dividerPaddingLeft = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_dividerPaddingLeft, 0);
-    dividerPaddingRight = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_dividerPaddingRight, 0);
-    dividerPaddingTop = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_dividerPaddingTop, 0);
-    dividerPaddingBottom = typedArray.getDimensionPixelSize(R.styleable.srv_SimpleRecyclerView_srv_dividerPaddingBottom, 0);
-    isSnappyEnabled = typedArray.getBoolean(R.styleable.srv_SimpleRecyclerView_srv_snappy, false);
-    snapAlignment = typedArray.getInt(R.styleable.srv_SimpleRecyclerView_srv_snap_alignment, 0);
-    showEmptyStateView = typedArray.getBoolean(R.styleable.srv_SimpleRecyclerView_srv_showEmptyStateView, false);
-    emptyStateViewRes = typedArray.getResourceId(R.styleable.srv_SimpleRecyclerView_srv_emptyStateView, 0);
-    loadMoreViewRes = typedArray.getResourceId(R.styleable.srv_SimpleRecyclerView_srv_loadMoreView, 0);
+    TypedArray typedArray = context.getTheme().obtainStyledAttributes(attrs, R.styleable.SimpleRecyclerView, defStyle, 0);
+    layoutMode = typedArray.getInt(R.styleable.SimpleRecyclerView_srv_layoutMode, 0);
+    gridSpanCount = typedArray.getInt(R.styleable.SimpleRecyclerView_srv_gridSpanCount, 0);
+    gridSpanSequence = typedArray.getString(R.styleable.SimpleRecyclerView_srv_gridSpanSequence);
+    spacing = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_spacing, 0);
+    verticalSpacing = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_verticalSpacing, 0);
+    horizontalSpacing = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_horizontalSpacing, 0);
+    isSpacingIncludeEdge = typedArray.getBoolean(R.styleable.SimpleRecyclerView_srv_isSpacingIncludeEdge, false);
+    showDivider = typedArray.getBoolean(R.styleable.SimpleRecyclerView_srv_showDivider, false);
+    showLastDivider = typedArray.getBoolean(R.styleable.SimpleRecyclerView_srv_showLastDivider, false);
+    dividerColor = typedArray.getColor(R.styleable.SimpleRecyclerView_srv_dividerColor, 0);
+    dividerOrientation = typedArray.getInt(R.styleable.SimpleRecyclerView_srv_dividerOrientation, 2);
+    dividerPaddingLeft = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_dividerPaddingLeft, 0);
+    dividerPaddingRight = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_dividerPaddingRight, 0);
+    dividerPaddingTop = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_dividerPaddingTop, 0);
+    dividerPaddingBottom = typedArray.getDimensionPixelSize(R.styleable.SimpleRecyclerView_srv_dividerPaddingBottom, 0);
+    isSnappyEnabled = typedArray.getBoolean(R.styleable.SimpleRecyclerView_srv_snappy, false);
+    snapAlignment = typedArray.getInt(R.styleable.SimpleRecyclerView_srv_snap_alignment, 0);
+    showEmptyStateView = typedArray.getBoolean(R.styleable.SimpleRecyclerView_srv_showEmptyStateView, false);
+    emptyStateViewRes = typedArray.getResourceId(R.styleable.SimpleRecyclerView_srv_emptyStateView, 0);
+    loadMoreViewRes = typedArray.getResourceId(R.styleable.SimpleRecyclerView_srv_loadMoreView, 0);
     typedArray.recycle();
   }
 
@@ -242,7 +242,8 @@ public class SimpleRecyclerView extends RecyclerView
   }
 
   private void checkLoadMoreThreshold() {
-    if (isEmptyViewShown || isLoadingMore) {
+    // check isEmpty() to prevent the case: removeAllCells triggers this call
+    if (isEmptyViewShown || isLoadingMore || isEmpty()) {
       return;
     }
 
@@ -274,25 +275,26 @@ public class SimpleRecyclerView extends RecyclerView
   }
 
   private void handleLoadMore() {
-    isLoadingMore = true;
-    onLoadMoreListener.onLoadMore(this);
+    if (onLoadMoreListener.shouldLoadMore()) {
+      onLoadMoreListener.onLoadMore();
+    }
   }
 
   private int getFirstVisibleItemPosition() {
-    if (layoutManager instanceof GridLayoutManager) {
-      return ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
-    } else if (layoutManager instanceof LinearLayoutManager) {
-      return ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
+    if (getLayoutManager() instanceof GridLayoutManager) {
+      return ((GridLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
+    } else if (getLayoutManager() instanceof LinearLayoutManager) {
+      return ((LinearLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
     } else {
       return -1;
     }
   }
 
   private int getLastVisibleItemPosition() {
-    if (layoutManager instanceof GridLayoutManager) {
-      return ((GridLayoutManager) layoutManager).findLastVisibleItemPosition();
-    } else if (layoutManager instanceof LinearLayoutManager) {
-      return ((LinearLayoutManager) layoutManager).findLastVisibleItemPosition();
+    if (getLayoutManager() instanceof GridLayoutManager) {
+      return ((GridLayoutManager) getLayoutManager()).findLastVisibleItemPosition();
+    } else if (getLayoutManager() instanceof LinearLayoutManager) {
+      return ((LinearLayoutManager) getLayoutManager()).findLastVisibleItemPosition();
     } else {
       return -1;
     }
@@ -338,19 +340,16 @@ public class SimpleRecyclerView extends RecyclerView
    * layout modes
    */
   public void useLinearVerticalMode() {
-    layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-    setLayoutManager(layoutManager);
+    setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
   }
 
   public void useLinearHorizontalMode() {
-    layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-    setLayoutManager(layoutManager);
+    setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
   }
 
   public void useGridMode(int spanCount) {
     setGridSpanCount(spanCount);
-    layoutManager = new GridLayoutManager(getContext(), spanCount);
-    setLayoutManager(layoutManager);
+    setLayoutManager(new GridLayoutManager(getContext(), spanCount));
 
     GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
       @Override
@@ -363,14 +362,14 @@ public class SimpleRecyclerView extends RecyclerView
       }
     };
     spanSizeLookup.setSpanIndexCacheEnabled(true);
-    ((GridLayoutManager) layoutManager).setSpanSizeLookup(spanSizeLookup);
+    ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
   }
 
   public void useGridModeWithSequence(int first, int... rest) {
     useGridModeWithSequence(Utils.toIntList(first, rest));
   }
 
-  public void useGridModeWithSequence(List<Integer> sequence) {
+  public void useGridModeWithSequence(@NonNull List<Integer> sequence) {
     final int lcm = Utils.lcm(sequence);
     final ArrayList<Integer> sequenceList = new ArrayList<>();
     for (int i = 0; i < sequence.size(); i++) {
@@ -381,8 +380,7 @@ public class SimpleRecyclerView extends RecyclerView
     }
 
     setGridSpanCount(lcm);
-    layoutManager = new GridLayoutManager(getContext(), lcm);
-    setLayoutManager(layoutManager);
+    setLayoutManager(new GridLayoutManager(getContext(), lcm));
 
     GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
       @Override
@@ -395,7 +393,7 @@ public class SimpleRecyclerView extends RecyclerView
       }
     };
     spanSizeLookup.setSpanIndexCacheEnabled(true);
-    ((GridLayoutManager) layoutManager).setSpanSizeLookup(spanSizeLookup);
+    ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
   }
 
   private void setGridSpanCount(int spanCount) {
@@ -412,7 +410,7 @@ public class SimpleRecyclerView extends RecyclerView
   private void showDividerInternal(@ColorInt int color,
                                    int paddingLeft, int paddingTop,
                                    int paddingRight, int paddingBottom) {
-    if (layoutManager instanceof GridLayoutManager) {
+    if (getLayoutManager() instanceof GridLayoutManager) {
       if (dividerOrientation == 0) {
         addDividerItemDecoration(color, DividerItemDecoration.HORIZONTAL,
           paddingLeft, paddingTop, paddingRight, paddingBottom);
@@ -425,8 +423,8 @@ public class SimpleRecyclerView extends RecyclerView
         addDividerItemDecoration(color, DividerItemDecoration.HORIZONTAL,
           paddingLeft, paddingTop, paddingRight, paddingBottom);
       }
-    } else if (layoutManager instanceof LinearLayoutManager) {
-      int orientation = ((LinearLayoutManager) layoutManager).getOrientation();
+    } else if (getLayoutManager() instanceof LinearLayoutManager) {
+      int orientation = ((LinearLayoutManager) getLayoutManager()).getOrientation();
       addDividerItemDecoration(color, orientation,
         paddingLeft, paddingTop, paddingRight, paddingBottom);
     }
@@ -463,7 +461,7 @@ public class SimpleRecyclerView extends RecyclerView
       Utils.dpToPx(getContext(), paddingRightDp), Utils.dpToPx(getContext(), paddingBottomDp));
   }
 
-  public void dontShowDividerForCellType(Class<?>... classes) {
+  public void dontShowDividerForCellType(@NonNull Class<?>... classes) {
     if (noDividerCellTypes == null) {
       noDividerCellTypes = new ArrayList<>();
     }
@@ -485,14 +483,14 @@ public class SimpleRecyclerView extends RecyclerView
   }
 
   private void setLinearSpacingInternal(int spacing, boolean includeEdge) {
-    int orientation = ((LinearLayoutManager) layoutManager).getOrientation();
+    int orientation = ((LinearLayoutManager) getLayoutManager()).getOrientation();
     addItemDecoration(LinearSpacingItemDecoration.newBuilder().spacing(spacing).orientation(orientation).includeEdge(includeEdge).build());
   }
 
   private void setSpacingInternal(int verSpacing, int horSpacing, boolean includeEdge) {
-    if (layoutManager instanceof GridLayoutManager) {
+    if (getLayoutManager() instanceof GridLayoutManager) {
       setGridSpacingInternal(verSpacing, horSpacing, includeEdge);
-    } else if (layoutManager instanceof LinearLayoutManager) {
+    } else if (getLayoutManager() instanceof LinearLayoutManager) {
       setLinearSpacingInternal(verSpacing, includeEdge);
     }
   }
@@ -562,7 +560,7 @@ public class SimpleRecyclerView extends RecyclerView
     setEmptyStateView(view);
   }
 
-  public void setEmptyStateView(View emptyStateView) {
+  public void setEmptyStateView(@NonNull View emptyStateView) {
     this.emptyStateViewCell = new InternalEmptyStateViewCell(emptyStateView);
     emptyStateViewCell.setSpanSize(gridSpanCount);
   }
@@ -575,46 +573,28 @@ public class SimpleRecyclerView extends RecyclerView
     setLoadMoreView(view);
   }
 
-  public void setLoadMoreView(View loadMoreView) {
+  public void setLoadMoreView(@NonNull View loadMoreView) {
     this.loadMoreViewCell = new InternalLoadMoreViewCell(loadMoreView);
     loadMoreViewCell.setSpanSize(gridSpanCount);
   }
 
-  public void setLoadingMore(boolean isLoadingMore) {
-    if (isLoadingMore) {
-      showLoadMoreView();
-    } else {
-      hideLoadMoreView();
-    }
-  }
-
-  private void showLoadMoreView() {
+  public void showLoadMoreView() {
     if (loadMoreViewCell == null || isLoadMoreViewShown) {
       isLoadingMore = true;
       return;
     }
 
     if (isLoadMoreToTop) {
-      post(new Runnable() {
-        @Override
-        public void run() {
-          addCell(0, loadMoreViewCell);
-        }
-      });
+      addCell(0, loadMoreViewCell);
     } else {
-      post(new Runnable() {
-        @Override
-        public void run() {
-          addCell(loadMoreViewCell);
-        }
-      });
+      addCell(loadMoreViewCell);
     }
 
     isLoadMoreViewShown = true;
     isLoadingMore = true;
   }
 
-  private void hideLoadMoreView() {
+  public void hideLoadMoreView() {
     if (loadMoreViewCell == null || !isLoadMoreViewShown) {
       isLoadingMore = false;
       return;
@@ -645,7 +625,7 @@ public class SimpleRecyclerView extends RecyclerView
     return isLoadMoreToTop;
   }
 
-  public void setOnLoadMoreListener(OnLoadMoreListener listener) {
+  public void setOnLoadMoreListener(@NonNull OnLoadMoreListener listener) {
     this.onLoadMoreListener = listener;
   }
 
@@ -657,11 +637,11 @@ public class SimpleRecyclerView extends RecyclerView
   /**
    * drag & drop
    */
-  public void enableDragAndDrop(DragAndDropCallback dragAndDropCallback) {
+  public void enableDragAndDrop(@NonNull DragAndDropCallback dragAndDropCallback) {
     enableDragAndDrop(0, dragAndDropCallback);
   }
 
-  public void enableDragAndDrop(@IdRes int dragHandleId, DragAndDropCallback dragAndDropCallback) {
+  public void enableDragAndDrop(@IdRes int dragHandleId, @NonNull DragAndDropCallback dragAndDropCallback) {
     DragAndDropOptions options = new DragAndDropOptions();
     options.setDragHandleId(dragHandleId);
     options.setCanLongPressToDrag(dragHandleId == 0);
@@ -675,11 +655,11 @@ public class SimpleRecyclerView extends RecyclerView
   /**
    * swipe to dismiss
    */
-  public void enableSwipeToDismiss(SwipeToDismissCallback swipeToDismissCallback, SwipeDirection... directions) {
+  public void enableSwipeToDismiss(@NonNull SwipeToDismissCallback swipeToDismissCallback, @NonNull SwipeDirection... directions) {
     enableSwipeToDismiss(swipeToDismissCallback, new HashSet<>(Arrays.asList(directions)));
   }
 
-  public void enableSwipeToDismiss(SwipeToDismissCallback swipeToDismissCallback, Set<SwipeDirection> directions) {
+  public void enableSwipeToDismiss(@NonNull SwipeToDismissCallback swipeToDismissCallback, @NonNull Set<SwipeDirection> directions) {
     SwipeToDismissOptions options = new SwipeToDismissOptions();
     options.setEnableDefaultFadeOutEffect(swipeToDismissCallback.enableDefaultFadeOutEffect());
     options.setSwipeToDismissCallback(swipeToDismissCallback);
@@ -695,7 +675,7 @@ public class SimpleRecyclerView extends RecyclerView
     enableSnappy(SnapAlignment.CENTER);
   }
 
-  public void enableSnappy(SnapAlignment alignment) {
+  public void enableSnappy(@NonNull SnapAlignment alignment) {
     SnapHelper snapHelper = alignment.equals(SnapAlignment.CENTER) ?
       new LinearSnapHelper() : new StartSnapHelper(spacing);
     snapHelper.attachToRecyclerView(this);
@@ -704,12 +684,12 @@ public class SimpleRecyclerView extends RecyclerView
   /**
    * section header
    */
-  public <T> void setSectionHeader(SectionHeaderProvider<T> provider) {
-    if (layoutManager instanceof GridLayoutManager) {
+  public <T> void setSectionHeader(@NonNull SectionHeaderProvider<T> provider) {
+    if (getLayoutManager() instanceof GridLayoutManager) {
       // todo
       return;
     }
-    if (layoutManager instanceof LinearLayoutManager) {
+    if (getLayoutManager() instanceof LinearLayoutManager) {
       addItemDecoration(new SectionHeaderItemDecoration(Utils.getTypeArgumentClass(provider.getClass()), provider));
     }
   }
@@ -718,52 +698,52 @@ public class SimpleRecyclerView extends RecyclerView
    * cell operations
    */
   @Override
-  public void addCell(SimpleCell cell) {
+  public void addCell(@NonNull SimpleCell cell) {
     adapter.addCell(cell);
   }
 
   @Override
-  public void addCell(int atPosition, SimpleCell cell) {
+  public void addCell(int atPosition, @NonNull SimpleCell cell) {
     adapter.addCell(atPosition, cell);
   }
 
   @Override
-  public void addCells(List<? extends SimpleCell> cells) {
+  public void addCells(@NonNull List<? extends SimpleCell> cells) {
     adapter.addCells(cells);
   }
 
   @Override
-  public void addCells(SimpleCell... cells) {
+  public void addCells(@NonNull SimpleCell... cells) {
     adapter.addCells(cells);
   }
 
   @Override
-  public void addCells(int fromPosition, List<? extends SimpleCell> cells) {
+  public void addCells(int fromPosition, @NonNull List<? extends SimpleCell> cells) {
     adapter.addCells(fromPosition, cells);
   }
 
   @Override
-  public void addCells(int fromPosition, SimpleCell... cells) {
+  public void addCells(int fromPosition, @NonNull SimpleCell... cells) {
     adapter.addCells(fromPosition, cells);
   }
 
   @Override
-  public <T extends SimpleCell & Updatable> void addOrUpdateCell(T cell) {
+  public <T extends SimpleCell & Updatable> void addOrUpdateCell(@NonNull T cell) {
     adapter.addOrUpdateCell(cell);
   }
 
   @Override
-  public <T extends SimpleCell & Updatable> void addOrUpdateCells(List<T> cells) {
+  public <T extends SimpleCell & Updatable> void addOrUpdateCells(@NonNull List<T> cells) {
     adapter.addOrUpdateCells(cells);
   }
 
   @Override
-  public <T extends SimpleCell & Updatable> void addOrUpdateCells(T... cells) {
+  public <T extends SimpleCell & Updatable> void addOrUpdateCells(@NonNull T... cells) {
     adapter.addOrUpdateCells(cells);
   }
 
   @Override
-  public void removeCell(SimpleCell cell) {
+  public void removeCell(@NonNull SimpleCell cell) {
     adapter.removeCell(cell);
   }
 
@@ -783,12 +763,12 @@ public class SimpleRecyclerView extends RecyclerView
   }
 
   @Override
-  public void updateCell(int atPosition, Object payload) {
+  public void updateCell(int atPosition, @NonNull Object payload) {
     adapter.updateCell(atPosition, payload);
   }
 
   @Override
-  public void updateCells(int fromPosition, int toPosition, List<Object> payloads) {
+  public void updateCells(int fromPosition, int toPosition, @NonNull Object payloads) {
     adapter.updateCells(fromPosition, toPosition, payloads);
   }
 
@@ -815,6 +795,7 @@ public class SimpleRecyclerView extends RecyclerView
   // remove all cells and indicates that data is refreshing, so the empty view will not be shown.
   public void removeAllCells(boolean showEmptyStateView) {
     this.isRefreshing = !showEmptyStateView;
+    this.isEmptyViewShown = false;
     adapter.removeAllCells();
   }
 
@@ -824,6 +805,52 @@ public class SimpleRecyclerView extends RecyclerView
 
   public int getItemCount() {
     return isEmptyViewShown ? 0 : adapter.getItemCount();
+  }
+
+  public void smoothScrollToPosition(int position, ScrollPosition scrollPosition, boolean skipSpacing) {
+    if (position < 0 || position >= getAllCells().size()) {
+      return;
+    }
+
+    SimpleLinearSmoothScroller scroller = new SimpleLinearSmoothScroller(getContext(), skipSpacing);
+    if (getLayoutManager().canScrollVertically()) {
+      scroller.setVerticalScrollPosition(scrollPosition);
+    } else if (getLayoutManager().canScrollHorizontally()) {
+      scroller.setHorizontalScrollPosition(scrollPosition);
+    }
+    scroller.setTargetPosition(position);
+    getLayoutManager().startSmoothScroll(scroller);
+  }
+
+  public void smoothScrollToPosition(int position, ScrollPosition scrollPosition) {
+    smoothScrollToPosition(position, scrollPosition, false);
+  }
+
+  @Override
+  public void smoothScrollToPosition(int position) {
+    smoothScrollToPosition(position, ScrollPosition.TOP, false);
+  }
+
+  public void scrollToPosition(int position, ScrollPosition scrollPosition, boolean skipSpacing) {
+    if (position < 0 || position >= getAllCells().size()) {
+      return;
+    }
+    
+    if (!(getLayoutManager() instanceof LinearLayoutManager)) {
+      return;
+    }
+
+    LinearLayoutManager layoutManager = ((LinearLayoutManager) getLayoutManager());
+
+    int padding = layoutManager.getOrientation() == HORIZONTAL ? layoutManager.getPaddingLeft() : layoutManager.getPaddingTop();
+
+    if (scrollPosition == ScrollPosition.TOP) {
+      int spacing = skipSpacing ? this.spacing : 0;
+      layoutManager.scrollToPositionWithOffset(position, -(padding + spacing));
+    } else if (scrollPosition == ScrollPosition.START) {
+      int spacing = skipSpacing ? -this.spacing : this.spacing;
+      layoutManager.scrollToPositionWithOffset(position, -padding + spacing / 2);
+    }
   }
 
   /**

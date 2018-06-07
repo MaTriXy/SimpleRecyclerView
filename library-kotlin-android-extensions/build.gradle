@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.novoda.bintray-release'
 
 buildscript {
@@ -6,8 +8,13 @@ buildscript {
         jcenter()
     }
     dependencies {
+        classpath deps.build.gradlePlugins.kotlin
         classpath deps.build.gradlePlugins.bintray
     }
+}
+
+androidExtensions {
+    experimental = true
 }
 
 android {
@@ -30,13 +37,14 @@ android {
 }
 
 dependencies {
-    api deps.support.recyclerview
+    compileOnly project(':library')
+    api deps.kotlin.stdlib
 }
 
 publish {
     userOrg = 'jaychang0917'
     groupId = 'com.jaychang'
-    artifactId = 'simplerecyclerview'
+    artifactId = 'simplerecyclerview-kotlin-android-extensions'
     publishVersion = '2.0.4'
     desc = 'A RecyclerView extension for building list more easily.'
     website = 'https://github.com/jaychang0917/SimpleRecyclerView'

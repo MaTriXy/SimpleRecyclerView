@@ -32,6 +32,8 @@ public class AutoLoadMoreActivity extends BaseActivity {
   @BindView(R.id.thresholdSeekBar)
   SeekBar thresholdSeekBar;
 
+  private boolean hasMoreData = true;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -73,20 +75,26 @@ public class AutoLoadMoreActivity extends BaseActivity {
 
     recyclerView.setOnLoadMoreListener(new OnLoadMoreListener() {
       @Override
-      public void onLoadMore(SimpleRecyclerView simpleRecyclerView) {
+      public boolean shouldLoadMore() {
+        return hasMoreData;
+      }
+
+      @Override
+      public void onLoadMore() {
         loadBooks();
       }
     });
   }
 
   private void loadBooks() {
-    recyclerView.setLoadingMore(true);
+    recyclerView.showLoadMoreView();
     DataUtils.getBooksAsync(this, new DataUtils.DataCallback() {
       @Override
       public void onSuccess(List<Book> books) {
+        recyclerView.hideLoadMoreView();
         bindBooks(books);
+        hasMoreData = false;
         ToastUtils.show(AutoLoadMoreActivity.this.getApplicationContext(), "Load more " + books.size() + " books.");
-        recyclerView.setLoadingMore(false);
       }
     });
   }
